@@ -19,15 +19,21 @@ import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import com.datastax.oss.driver.api.core.ConsistencyLevel;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
 import com.datastax.oss.driver.api.core.config.DriverConfig;
 import com.datastax.oss.driver.api.core.config.DriverConfigLoader;
 import com.datastax.oss.driver.api.core.config.ProgrammaticDriverConfigLoaderBuilder;
 import com.datastax.oss.driver.api.core.context.DriverContext;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.datastax.oss.driver.internal.core.config.typesafe.DefaultDriverConfigLoader;
 import com.datastax.oss.driver.internal.core.config.typesafe.DefaultProgrammaticDriverConfigLoaderBuilder;
 import com.datastax.oss.driver.internal.core.util.concurrent.CompletableFutures;
@@ -36,6 +42,9 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 
 public class KubernetesTest
 {
+    private static final ScheduledExecutorService scheduler =
+            Executors.newScheduledThreadPool(1);
+
     public static void main(String[] args)
     {
         //        CqlSession cqlSession = CqlSession.builder().addContactPoints(Arrays.asList(
@@ -49,14 +58,26 @@ public class KubernetesTest
         CqlSession cqlSession = CqlSession.builder()
                 .withConfigLoader(configLoaderBuilder.build())
                 .addContactPoints(Collections.singletonList(
-                InetSocketAddress.createUnresolved("10.105.230.229", 9042))
+                InetSocketAddress.createUnresolved("10.103.221.123", 9042))
         ).withLocalDatacenter("DC1-K8Demo").build();
 
-        System.out.println(cqlSession.getMetadata().getNodes());
+        scheduler.scheduleAtFixedRate(() -> {
+            System.out.println(cqlSession.getMetadata().getNodes());
 
-        System.out.println("system.peers content:");
-        List<Row> all = cqlSession.execute("select * from system.peers").all();
-        System.out.println(all.stream().map(v -> v.getInetAddress("peer") + " " + v.getString("data_center") + " " + v.getUuid("host_id")).collect(Collectors.toList()));
+            System.out.println("system.peers content:");
+            ResultSet execute = cqlSession.execute(SimpleStatement.newInstance("select * from system.peers").setConsistencyLevel(ConsistencyLevel.QUORUM));
+            System.out.println(execute.getExecutionInfo().getCoordinator().getEndPoint().resolve());
+            System.out.println(execute.getExecutionInfo().getCoordinator().getBroadcastAddress());
+
+            System.out.println(execute.all().stream().map(v -> v.getInetAddress("peer") + " " + v.getString("data_center") + " " + v.getUuid("host_id")).collect(Collectors.toList()));
+
+            System.out.println("system.local content:");
+            ResultSet execute1 = cqlSession.execute("select * from system.local");
+            System.out.println(execute1.getExecutionInfo().getCoordinator().getEndPoint().resolve());
+            System.out.println(execute1.getExecutionInfo().getCoordinator().getBroadcastAddress());
+            System.out.println(execute1.all().stream().map(v -> v.getInetAddress("broadcast_address") + " " + v.getInetAddress("listen_address") + " " + v.getInetAddress("rpc_address") + " " + v.getUuid("host_id")).collect(Collectors.toList()));
+        }, 0L, 500L,  TimeUnit.MILLISECONDS);
+
     }
 
 

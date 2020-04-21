@@ -12,3 +12,9 @@ kubectl exec -it cassandra-0 -- nodetool status
 # on mac to make the load balancer expose external ip
 minikube tunnel
 kubectl apply -f loadBalancer.yaml
+
+# scale down replicas to one:
+kubectl edit statefulset cassandra
+# set replicas: 1
+# verify number of replicas
+kubectl get statefulset cassandra
