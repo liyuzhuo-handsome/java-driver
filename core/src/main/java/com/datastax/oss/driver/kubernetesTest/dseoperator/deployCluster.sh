@@ -49,9 +49,6 @@ kubectl -n cass-operator get secret cluster1-superuser -o yaml
 # decode both username and password using
 echo base64_value | base64 -D
 
-# scale down DSE instances to 1 instance
-kubectl -n cass-operator apply -f example-cassdc-minimal-one-node.yml
-
 # -----------------–-----------------–-----------------–-----------------–-----------------–-----------------–----------
 # start one node cluster and scale up to 2 nodes
 kubectl create -f cass-operator-manifests.yml
@@ -77,3 +74,32 @@ kubectl -n cass-operator get pods --selector cassandra.datastax.com/cluster=clus
 # scale up to two nodes
 kubectl -n cass-operator apply -f example-cassdc-minimal-two-nodes.yml
 
+
+# -----------------–-----------------–-----------------–-----------------–-----------------–-----------------–----------
+# start two nodes cluster and scale up(kill) to 1 node
+kubectl create -f cass-operator-manifests.yml
+kubectl create -f storage.yml
+kubectl -n cass-operator create -f example-cassdc-minimal-two-nodes.yml
+kubectl apply -f cass-operator-manifests.yml
+
+# get operator
+kubectl -n cass-operator get pods --selector name=cass-operator
+
+# create storage
+kubectl apply -f storage.yml
+
+# create datacenter
+kubectl -n cass-operator apply -f example-cassdc-minimal-two-nodes.yml
+
+#get nodes
+kubectl -n cass-operator get pods --selector cassandra.datastax.com/cluster=cluster1
+
+# start driver and connect to the nodes
+
+# scale down (kill one stateful set)
+kubectl -n cass-operator delete deployment cluster1-dc1-default-sts-1
+kubectl -n cass-operator delete pods cluster1-dc1-default-sts-1  --grace-period=0 --force
+
+#get nodes
+kubectl -n cass-operator get pods --selector cassandra.datastax.com/cluster=cluster1
+kubectl -n cass-operator exec -it -c cassandra cluster1-dc1-default-sts-0 -- nodetool status
