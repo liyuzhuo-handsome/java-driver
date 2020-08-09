@@ -981,14 +981,22 @@ public abstract class TestUtils {
 
   /**
    * Throws a {@link SkipException} if the input {@link CCMAccess} does not support compact storage
-   * (C* 4.0+)
+   * (C* 4.0+ or DSE 6.0+).
    *
    * @param ccm cluster to check against
    */
   public static void compactStorageSupportCheck(CCMAccess ccm) {
-    if (ccm.getCassandraVersion().nextStable().compareTo(VersionNumber.parse("4.0")) >= 0) {
-      throw new SkipException(
-          "Compact tables are not allowed in Cassandra starting with 4.0 version");
+    VersionNumber cassandraVersion = ccm.getCassandraVersion();
+    VersionNumber dseVersion = ccm.getDSEVersion();
+    if (dseVersion == null) {
+      if (cassandraVersion.nextStable().compareTo(VersionNumber.parse("4.0")) >= 0) {
+        throw new SkipException(
+            "Compact tables are not allowed in Cassandra starting with 4.0 version");
+      }
+    } else {
+      if (dseVersion.compareTo(VersionNumber.parse("6.0")) >= 0) {
+        throw new SkipException("Compact tables are not allowed in DSE starting with 6.0 version");
+      }
     }
   }
 }
