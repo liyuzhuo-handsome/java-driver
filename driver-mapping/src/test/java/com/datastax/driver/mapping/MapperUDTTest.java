@@ -495,15 +495,18 @@ public class MapperUDTTest extends CCMTestsSupport {
     Mapper<User> mapper = manager.mapper(User.class);
     session().execute("DROP TABLE users");
     // error assertion depends on C* version
-    boolean isCassandra4 =
-        ccm().getCassandraVersion().nextStable().compareTo(VersionNumber.parse("4.0")) >= 0;
+    VersionNumber version = ccm().getCassandraVersion();
+    VersionNumber dseVersion = ccm().getDSEVersion();
+    boolean hasModernErrorMessage =
+        version.getMajor() > 3
+            && (dseVersion == null || dseVersion.compareTo(VersionNumber.parse("6.8")) >= 0);
     // usage of stale mapper
     try {
       mapper.save(user);
       fail("Expected InvalidQueryException");
     } catch (InvalidQueryException e) {
       // error message is different for C* 4.0
-      if (isCassandra4) {
+      if (hasModernErrorMessage) {
         assertThat(e.getMessage()).contains("table users", "does not exist");
       } else {
         assertThat(e.getMessage()).contains("unconfigured", "users");
@@ -513,7 +516,7 @@ public class MapperUDTTest extends CCMTestsSupport {
       mapper.get(user.getUserId());
       fail("Expected InvalidQueryException");
     } catch (InvalidQueryException e) {
-      if (isCassandra4) {
+      if (hasModernErrorMessage) {
         assertThat(e.getMessage()).contains("table users", "does not exist");
       } else {
         assertThat(e.getMessage()).contains("unconfigured", "users");
