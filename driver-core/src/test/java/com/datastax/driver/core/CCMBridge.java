@@ -275,6 +275,7 @@ public class CCMBridge implements CCMAccess {
       }
     } else if (dseVersion.getMajor() == 6) {
       if (dseVersion.getMinor() < 8) {
+        // DSE 6.0 and 6.7 report C* 4.0, but their C* version is actually closer to 3.11.
         return VersionNumber.parse("3.11");
       } else {
         return VersionNumber.parse("4.0");
