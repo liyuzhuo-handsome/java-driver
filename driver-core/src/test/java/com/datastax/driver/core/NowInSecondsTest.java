@@ -18,6 +18,8 @@ package com.datastax.driver.core;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.datastax.driver.core.utils.CassandraVersion;
+import org.testng.SkipException;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -31,6 +33,14 @@ public class NowInSecondsTest extends CCMTestsSupport {
   @Override
   public Cluster.Builder createClusterBuilder() {
     return super.createClusterBuilder().allowBetaProtocolVersion();
+  }
+
+  @BeforeClass(groups = "short")
+  public void checkNotDSE() {
+    VersionNumber dseVersion = ccm().getDSEVersion();
+    if (dseVersion != null && dseVersion.compareTo(VersionNumber.parse("6.8")) >= 0) {
+      throw new SkipException("DSE 6.8 does not support now-in-seconds");
+    }
   }
 
   @BeforeMethod(groups = "short")
