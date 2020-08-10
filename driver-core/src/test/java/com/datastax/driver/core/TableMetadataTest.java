@@ -432,6 +432,8 @@ public class TableMetadataTest extends CCMTestsSupport {
     // Cassandra 4.0 +
     if (isRealCassandra4) {
 
+      assertThat(table.getOptions().getAdditionalWritePolicy())
+          .has(new ContainsAnyStringCondition("99p", "99PERCENTILE"));
       assertThat(table.getOptions().getGcGraceInSeconds()).isEqualTo(42);
       assertThat(table.getOptions().getBloomFilterFalsePositiveChance()).isEqualTo(0.01);
       assertThat(table.getOptions().getComment()).isEqualTo("My awesome table");
@@ -450,7 +452,7 @@ public class TableMetadataTest extends CCMTestsSupport {
           .contains(entry("chunk_length_in_kb", "128")); // note the "in" prefix
       assertThat(table.getOptions().getDefaultTimeToLive()).isEqualTo(0);
       assertThat(table.getOptions().getSpeculativeRetry())
-          .isEqualTo(dseVersion == null ? "99.9p" : "99.9PERCENTILE");
+          .has(new ContainsAnyStringCondition("99p", "99PERCENTILE"));
       assertThat(table.getOptions().getIndexInterval()).isNull();
       assertThat(table.getOptions().getMinIndexInterval()).isEqualTo(128);
       assertThat(table.getOptions().getMaxIndexInterval()).isEqualTo(2048);
@@ -459,7 +461,9 @@ public class TableMetadataTest extends CCMTestsSupport {
       assertThat(table.getOptions().getExtensions()).isEmpty(); // default
       assertThat(table.getOptions().getMemtableFlushPeriodInMs()).isEqualTo(1000);
       assertThat(table.asCQLQuery())
-          .contains("additional_write_policy = '99p'")
+          .has(
+              new ContainsAnyStringCondition(
+                  "additional_write_policy = '99p'", "additional_write_policy = '99PERCENTILE'"))
           .contains("read_repair = 'BLOCKING'")
           .contains("gc_grace_seconds = 42")
           .contains("bloom_filter_fp_chance = 0.01")
@@ -472,10 +476,9 @@ public class TableMetadataTest extends CCMTestsSupport {
               "'class' : 'org.apache.cassandra.io.compress.SnappyCompressor'") // sstable_compression becomes class
           .contains("'chunk_length_in_kb' : 128") // note the "in" prefix
           .contains("default_time_to_live = 0")
-          .contains(
-              dseVersion == null
-                  ? "speculative_retry = '99.9p'"
-                  : "speculative_retry = '99.9PERCENTILE'")
+          .has(
+              new ContainsAnyStringCondition(
+                  "speculative_retry = '99.9p'", "speculative_retry = '99.9PERCENTILE'"))
           .contains("min_index_interval = 128")
           .contains("max_index_interval = 2048")
           .contains("crc_check_chance = 0.5")
@@ -934,4 +937,5 @@ public class TableMetadataTest extends CCMTestsSupport {
         table1.asCQLQuery(),
         table2.asCQLQuery());
   }
+
 }
