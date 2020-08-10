@@ -34,7 +34,7 @@ public class NowInSecondsTest extends CCMTestsSupport {
   protected void initTestContext(Object testInstance, Method testMethod) throws Exception {
     VersionNumber dseVersion = CCMBridge.getGlobalDSEVersion();
     if (dseVersion != null && dseVersion.compareTo(VersionNumber.parse("6.8")) >= 0) {
-      throw new SkipException("DSE 6.8 does not support transient replication");
+      throw new SkipException("DSE 6.8 does not support now-in-seconds");
     }
     super.initTestContext(testInstance, testMethod);
   }
