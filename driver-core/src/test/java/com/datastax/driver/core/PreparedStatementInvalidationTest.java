@@ -36,6 +36,8 @@ import static junit.framework.TestCase.fail;
 
 import com.datastax.driver.core.exceptions.NoHostAvailableException;
 import com.datastax.driver.core.utils.CassandraVersion;
+import java.lang.reflect.Method;
+import org.testng.SkipException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -50,6 +52,15 @@ import org.testng.annotations.Test;
  */
 @CassandraVersion("4.0")
 public class PreparedStatementInvalidationTest extends CCMTestsSupport {
+
+  @Override
+  protected void initTestContext(Object testInstance, Method testMethod) throws Exception {
+    VersionNumber dseVersion = CCMBridge.getGlobalDSEVersion();
+    if (dseVersion != null && dseVersion.compareTo(VersionNumber.parse("6.8")) >= 0) {
+      throw new SkipException("DSE 6.8 does not support protocol v5");
+    }
+    super.initTestContext(testInstance, testMethod);
+  }
 
   @Override
   public Cluster.Builder createClusterBuilder() {
