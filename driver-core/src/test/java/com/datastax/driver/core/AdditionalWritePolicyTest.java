@@ -22,6 +22,7 @@ import com.datastax.driver.core.exceptions.InvalidQueryException;
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 import com.datastax.driver.core.schemabuilder.TableOptions;
 import com.datastax.driver.core.utils.CassandraVersion;
+import org.testng.SkipException;
 import org.testng.annotations.Test;
 
 @CassandraVersion(
@@ -48,7 +49,7 @@ public class AdditionalWritePolicyTest extends CCMTestsSupport {
                 .getTable(test_table)
                 .getOptions()
                 .getAdditionalWritePolicy())
-        .isEqualTo("99p");
+        .matches("99p|99PERCENTILE");
     cleanup(test_table);
   }
 
@@ -69,7 +70,7 @@ public class AdditionalWritePolicyTest extends CCMTestsSupport {
                 .getTable(test_table)
                 .getOptions()
                 .getAdditionalWritePolicy())
-        .isEqualTo("44p");
+        .matches("44p|44PERCENTILE");
     cleanup(test_table);
   }
 
@@ -90,12 +91,16 @@ public class AdditionalWritePolicyTest extends CCMTestsSupport {
                 .getTable(test_table)
                 .getOptions()
                 .getAdditionalWritePolicy())
-        .isEqualTo("350ms");
+        .matches("350(\\.0)?ms");
     cleanup(test_table);
   }
 
   @Test(groups = "short")
   public void should_create_table_with_additonal_write_policy_never() {
+    VersionNumber dseVersion = ccm().getDSEVersion();
+    if (dseVersion != null && dseVersion.compareTo(VersionNumber.parse("6.8")) >= 0) {
+      throw new SkipException("Value NEVER is illegal in DSE 6.8");
+    }
     String test_table = "awp_never";
     session()
         .execute(
@@ -149,10 +154,15 @@ public class AdditionalWritePolicyTest extends CCMTestsSupport {
                   .additionalWritePolicy(new TableOptions.AdditionalWritePolicyValue("'ALL'")));
       fail("Should not be able to create table with invlaid 'additional_write_policy': 'ALL'");
     } catch (InvalidQueryException iqe) {
-      assertThat(iqe)
-          .hasMessageContaining("Invalid value")
-          .hasMessageContaining("ALL")
-          .hasMessageContaining("for option");
+      VersionNumber dseVersion = ccm().getDSEVersion();
+      if (dseVersion != null && dseVersion.compareTo(VersionNumber.parse("6.8")) >= 0) {
+        assertThat(iqe).hasMessageContaining("Value ALL is not legal");
+      } else {
+        assertThat(iqe)
+            .hasMessageContaining("Invalid value")
+            .hasMessageContaining("ALL")
+            .hasMessageContaining("for option");
+      }
     } finally {
       cleanup(test_table);
     }
