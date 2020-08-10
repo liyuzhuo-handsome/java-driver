@@ -156,7 +156,7 @@ public class AdditionalWritePolicyTest extends CCMTestsSupport {
     } catch (InvalidQueryException iqe) {
       VersionNumber dseVersion = ccm().getDSEVersion();
       if (dseVersion != null && dseVersion.compareTo(VersionNumber.parse("6.8")) >= 0) {
-        assertThat(iqe).hasMessageContaining("Value ALL is not legal");
+        assertThat(iqe).hasMessageContaining("value ALL is not legal");
       } else {
         assertThat(iqe)
             .hasMessageContaining("Invalid value")
