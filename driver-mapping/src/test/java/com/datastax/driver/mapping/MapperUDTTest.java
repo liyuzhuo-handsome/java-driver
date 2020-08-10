@@ -497,9 +497,12 @@ public class MapperUDTTest extends CCMTestsSupport {
     // error assertion depends on C* version
     VersionNumber version = ccm().getCassandraVersion();
     VersionNumber dseVersion = ccm().getDSEVersion();
-    boolean hasModernErrorMessage =
-        version.getMajor() > 3
-            && (dseVersion == null || dseVersion.compareTo(VersionNumber.parse("6.8")) >= 0);
+    boolean hasModernErrorMessage;
+    if (dseVersion == null) {
+      hasModernErrorMessage = version.getMajor() > 3;
+    } else {
+      hasModernErrorMessage = dseVersion.getMajor() > 5;
+    }
     // usage of stale mapper
     try {
       mapper.save(user);
