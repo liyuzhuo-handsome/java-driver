@@ -62,7 +62,7 @@ public class WarningsTest extends CCMTestsSupport {
           .contains("Batch")
           .contains(keyspace + ".foo")
           .contains(" is of size")
-          .contains(", exceeding specified threshold");
+          .matches("exceeding specified (warning)? threshold");
     } finally {
       logAppender.disableFor(RequestHandler.class);
     }
