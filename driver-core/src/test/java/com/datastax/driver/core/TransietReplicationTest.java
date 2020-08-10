@@ -24,6 +24,7 @@ import com.datastax.driver.core.schemabuilder.TableOptions;
 import com.datastax.driver.core.utils.CassandraVersion;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
+import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -35,6 +36,14 @@ import org.testng.annotations.Test;
 public class TransietReplicationTest extends CCMTestsSupport {
 
   private static final String TRANSIENT_REPLICATION_KEYSPACE = "transient_rep_ks";
+
+  @BeforeClass(groups = "short")
+  public void checkNotDSE() {
+    VersionNumber dseVersion = ccm().getDSEVersion();
+    if (dseVersion != null && dseVersion.compareTo(VersionNumber.parse("6.8")) >= 0) {
+      throw new SkipException("DSE 6.8 does not support transient replication");
+    }
+  }
 
   @BeforeClass(groups = "short")
   public void createKeyspace() {
