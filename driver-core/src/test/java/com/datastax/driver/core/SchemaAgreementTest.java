@@ -58,7 +58,7 @@ public class SchemaAgreementTest extends CCMTestsSupport {
 
   @Test(groups = "short")
   public void should_check_agreement_through_cluster_metadata() {
-    TestUtils.updateSystemPeersCheck(ccm());
+    TestUtils.updateSystemTablesCheck(ccm());
     Cluster controlCluster = register(TestUtils.buildControlCluster(cluster(), ccm()));
     Session controlSession = controlCluster.connect();
 

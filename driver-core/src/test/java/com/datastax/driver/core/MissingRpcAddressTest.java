@@ -38,6 +38,7 @@ public class MissingRpcAddressTest extends CCMTestsSupport {
 
   @Test(groups = "short")
   public void testMissingRpcAddressAtStartup() throws Exception {
+    TestUtils.updateSystemTablesCheck(ccm());
     deleteNode2RpcAddressFromNode1();
     // Use only one contact point to make sure that the control connection is on node1
     Cluster cluster =

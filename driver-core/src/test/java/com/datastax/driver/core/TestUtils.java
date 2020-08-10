@@ -1000,7 +1000,7 @@ public abstract class TestUtils {
     }
   }
 
-  public static void updateSystemPeersCheck(CCMAccess ccm) {
+  public static void updateSystemTablesCheck(CCMAccess ccm) {
     VersionNumber dseVersion = ccm.getDSEVersion();
     if (dseVersion != null) {
       if (dseVersion.compareTo(VersionNumber.parse("6.8")) >= 0) {
