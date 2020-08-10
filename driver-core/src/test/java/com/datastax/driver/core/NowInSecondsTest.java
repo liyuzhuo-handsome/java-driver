@@ -18,8 +18,8 @@ package com.datastax.driver.core;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.datastax.driver.core.utils.CassandraVersion;
+import java.lang.reflect.Method;
 import org.testng.SkipException;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -31,16 +31,17 @@ public class NowInSecondsTest extends CCMTestsSupport {
       new SimpleStatement("SELECT TTL(v) FROM test WHERE k = 1");
 
   @Override
-  public Cluster.Builder createClusterBuilder() {
-    return super.createClusterBuilder().allowBetaProtocolVersion();
+  protected void initTestContext(Object testInstance, Method testMethod) throws Exception {
+    VersionNumber dseVersion = CCMBridge.getGlobalDSEVersion();
+    if (dseVersion != null && dseVersion.compareTo(VersionNumber.parse("6.8")) >= 0) {
+      throw new SkipException("DSE 6.8 does not support transient replication");
+    }
+    super.initTestContext(testInstance, testMethod);
   }
 
-  @BeforeClass(groups = "short")
-  public void checkNotDSE() {
-    VersionNumber dseVersion = ccm().getDSEVersion();
-    if (dseVersion != null && dseVersion.compareTo(VersionNumber.parse("6.8")) >= 0) {
-      throw new SkipException("DSE 6.8 does not support now-in-seconds");
-    }
+  @Override
+  public Cluster.Builder createClusterBuilder() {
+    return super.createClusterBuilder().allowBetaProtocolVersion();
   }
 
   @BeforeMethod(groups = "short")
