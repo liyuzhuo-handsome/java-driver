@@ -510,7 +510,7 @@ public class MapperUDTTest extends CCMTestsSupport {
     } catch (InvalidQueryException e) {
       // error message is different for C* 4.0
       if (hasModernErrorMessage) {
-        assertThat(e.getMessage()).contains("table users", "does not exist");
+        assertThat(e.getMessage()).contains("table", "users", "does not exist");
       } else {
         assertThat(e.getMessage()).contains("unconfigured", "users");
       }
@@ -520,7 +520,7 @@ public class MapperUDTTest extends CCMTestsSupport {
       fail("Expected InvalidQueryException");
     } catch (InvalidQueryException e) {
       if (hasModernErrorMessage) {
-        assertThat(e.getMessage()).contains("table users", "does not exist");
+        assertThat(e.getMessage()).contains("table", "users", "does not exist");
       } else {
         assertThat(e.getMessage()).contains("unconfigured", "users");
       }
