@@ -999,4 +999,13 @@ public abstract class TestUtils {
       }
     }
   }
+
+  public static void updateSystemPeersCheck(CCMAccess ccm) {
+    VersionNumber dseVersion = ccm.getDSEVersion();
+    if (dseVersion != null) {
+      if (dseVersion.compareTo(VersionNumber.parse("6.8")) >= 0) {
+        throw new SkipException("System.peers cannot be modified in DSE starting with 6.8 version");
+      }
+    }
+  }
 }
